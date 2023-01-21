@@ -59,8 +59,15 @@ client.on('messageCreate', async (message) => {
         if (commandName === 'chess') {
             chessBoard.execute(message);
         }
-        
-        
+        if (commandName === 'chessgame') {
+            // Get the opponent's user ID from the message
+            let opponentId = message.content.slice(commandName.length + 9);
+            // Send a message to confirm that the game has started
+            message.channel.send(`Game started with opponent:<@${opponentId}>`);
+            // Start the game logic here
+        }
+
+
         // Command to search and ping multilinks for tournaments !ml id1 id2 acronyms
         if (commandName === 'ml') {
 
@@ -149,7 +156,7 @@ async function getFirstMatch(matchID) {
             let matchInfo = {
                 matchID: match.id,
                 date: Date.parse(match.raw_start)
-            };        
+            };
             return matchInfo;
         })
         .catch(error => {
@@ -160,6 +167,8 @@ async function getFirstMatch(matchID) {
             }
         });
 }
+
+
 
 
 
