@@ -61,9 +61,9 @@ client.on('messageCreate', async (message) => {
         }
         if (commandName === 'chessgame') {
             // Get the opponent's user ID from the message
-            let opponentId = message.content.slice(commandName.length + 9);
+            let opponentId = message.author.id;
             // Send a message to confirm that the game has started
-            message.channel.send(`Game started with opponent:<@${opponentId}>`);
+            message.channel.send(`Game started with opponent: <@${opponentId}>`);
             // Start the game logic here
         }
 
