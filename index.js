@@ -60,11 +60,7 @@ client.on('messageCreate', async (message) => {
             chessBoard.execute(message);
         }
         if (commandName === 'chessgame') {
-            // Get the opponent's user ID from the message
-            let opponentId = message.author.id;
-            // Send a message to confirm that the game has started
-            message.channel.send(`Game started with opponent: <@${opponentId}>`);
-            // Start the game logic here
+            chess.startchessgame(message);
         }
 
 
