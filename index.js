@@ -1,7 +1,7 @@
 console.log('Bot is starting...');
 const Discord = require('discord.js');
 const osu = require('node-osu');
-const chessBoard = require('./chess.js');
+const chess = require('./chess.js');
 const config = require(`./config.js`);
 const osuApi = new osu.Api(config.osuApi, {
     // baseUrl: sets the base api url (default: https://osu.ppy.sh/api)
@@ -57,7 +57,7 @@ client.on('messageCreate', async (message) => {
         let commandName = args.shift().toLowerCase();
 
         if (commandName === 'chess') {
-            chessBoard.execute(message);
+            chess.execute(message);
         }
         if (commandName === 'chessgame') {
             chess.startchessgame(message);
