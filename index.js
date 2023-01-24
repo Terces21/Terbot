@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 const osu = require('node-osu');
 const chess = require('./chess.js');
 const config = require(`./config.js`);
+const idle = require(`./adventure.js`);
 const osuApi = new osu.Api(config.osuApi, {
     // baseUrl: sets the base api url (default: https://osu.ppy.sh/api)
     notFoundAsError: true, // Throw an error on not found instead of returning nothing. (default: true)
@@ -61,6 +62,12 @@ client.on('messageCreate', async (message) => {
         }
         if (commandName === 'chessgame') {
             chess.startchessgame(message);
+        }
+        if (commandName === 'start') {
+            idle.start(message);
+        }
+        if (commandName === 'adventure') {
+            idle.adventure.createPlayerProfile(message.author.username);
         }
 
 
