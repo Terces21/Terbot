@@ -67,11 +67,39 @@ client.on('messageCreate', async (message) => {
             idle.start(message);
         }
         if (commandName === 'adventure') {
+            console.log(message.author.username)
+            idle.adventure.name(message.author.username);
             idle.adventure.createPlayerProfile(message);
-            idle.adventure.createPlayerProfile(message.author.username);
         }
+        // Command to return a matchID that's the closest to the given date
+        if (commandName === 'findmatch') {
+            const MIN_MATCH_ID = 44000000;
+            const MAX_MATCH_ID = 150000000;
+            const args = message.content.split(' ');
+            const targetDate = new Date(args.slice(1).join(' '));
+            let closestMatchId;
+            let closestDifference = Infinity;
+            let minId = MIN_MATCH_ID;
+            let maxId = MAX_MATCH_ID;
 
-
+            while (minId <= maxId) {
+                const middleId = Math.floor((minId + maxId) / 2);
+                const match = await osuApi.getMatch({ match_id: middleId });
+                const matchDate = new Date(match.start_time);
+                const difference = Math.abs(targetDate - matchDate);
+                console.log(`checked ID: ${middleId}`);
+                if (difference < closestDifference) {
+                    closestMatchId = match.match_id;
+                    closestDifference = difference;
+                }
+                if (matchDate > targetDate) {
+                    maxId = middleId - 1;
+                } else {
+                    minId = middleId + 1;
+                }
+            }
+            message.reply(`The closest match to the provided date and time is match ID ${closestMatchId}.`);
+        }
         // Command to search and ping multilinks for tournaments !ml id1 id2 acronyms
         if (commandName === 'ml') {
 
@@ -115,8 +143,7 @@ client.on('messageCreate', async (message) => {
             }
             message.reply(`Process finished.`);
         }
-
-        //command to search for multiplayer ID's in a certain time frame  
+        //Command to search for multiplayer ID's in a certain time frame  
         else if (commandName === 'sid') {
             let startID = args.shift();
             let matchInfo = await getFirstMatch(startID);
