@@ -67,6 +67,7 @@ client.on('messageCreate', async (message) => {
             idle.start(message);
         }
         if (commandName === 'adventure') {
+            idle.adventure.createPlayerProfile(message);
             idle.adventure.createPlayerProfile(message.author.username);
         }
 

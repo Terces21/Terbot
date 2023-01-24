@@ -9,7 +9,8 @@ module.exports = {
     },
     adventure: {
         players: {},
-        createPlayerProfile: function (playerName) {
+        createPlayerProfile: function (message) {
+            let playerName = message.author.username;
             // Check if player already exists
             if (!this.players[playerName]) {
                 this.players[playerName] = {
@@ -19,9 +20,10 @@ module.exports = {
                     equipment: []
                 };
                 console.log(`Player ${playerName} profile created successfully!`);
-                message.channel.send(`Player ${playerName}, profile created succesfully!`)
+                message.channel.send(`Player ${playerName} profile created successfully!`);
             } else {
                 console.log(`Player ${playerName} already exists!`);
+                message.channel.send(`Player ${playerName} already exists!`);
             }
         }
     }
