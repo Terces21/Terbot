@@ -74,12 +74,34 @@ client.on('messageCreate', async (message) => {
         // Command to return a matchID that's the closest to the given date
         if (commandName === 'findmatch') {
             let maxMatchId;
+            // this is the id from a match on 25-01-2023
             let id = 106458592;
             let attempts = 0;
+            // 1 attempt is about 1,5 months range
             const maxAttempts = 20;
-            // set a maximum difference of 55 days
             const maxDifference = 55 * 24 * 60 * 60 * 1000;
             const currentDate = new Date();
+            const args = message.content.split(' ');
+            let targetDate;
+            const dateRegex = /(\d{2})-(\d{2})-(\d{4})/;
+            const dateString = args.slice(1).join(' ');
+            const match = dateString.match(dateRegex);
+            const sixMonthsInMilliseconds = 6 * 30 * 24 * 60 * 60 * 1000;
+            if (match) {
+                const [_, day, month, year] = match;
+                targetDate = new Date(`${year}-${month}-${day} ${dateString.slice(10)}`);
+            } else {
+                targetDate = new Date(dateString);
+            }
+            if (targetDate > currentDate) {
+                message.reply(`The date you have entered is in the future, please enter a date that's in the past.`);
+                return;
+            }
+            if (currentDate - targetDate > sixMonthsInMilliseconds) {
+                message.reply("The target date can be at most 6 months in the past.");
+                return;
+            }
+
             while (attempts < maxAttempts) {
                 try {
                     const match = await osuApi.getMatch({ mp: id });
@@ -106,19 +128,7 @@ client.on('messageCreate', async (message) => {
             else {
                 // calculate the min match id
                 const minMatchId = maxMatchId - 4000000;
-                const MAX_TRIES = 15;
-                const args = message.content.split(' ');
-                let targetDate;
-                const dateRegex = /(\d{2})-(\d{2})-(\d{4})/;
-                const dateString = args.slice(1).join(' ');
-
-                const match = dateString.match(dateRegex);
-                if (match) {
-                    const [_, day, month, year] = match;
-                    targetDate = new Date(`${year}-${month}-${day} ${dateString.slice(10)}`);
-                } else {
-                    targetDate = new Date(dateString);
-                }
+                const MAX_TRIES = 20;
                 let closestMatchId;
                 let closestDifference = Infinity;
                 let minId = minMatchId;
@@ -127,12 +137,6 @@ client.on('messageCreate', async (message) => {
                 let middleId = Math.floor((minId + maxId) / 2);
                 let closest;
                 console.log(`This is the target date: ${targetDate}`)
-
-                if (targetDate > currentDate) {
-                    message.reply(`The date you have entered is in the future, please enter a date that's in the past.`);
-                    return;
-                }
-
                 while (minId <= maxId && tries < MAX_TRIES) {
                     try {
                         console.log(`Current range: ${minId} - ${maxId}`)
@@ -170,7 +174,7 @@ client.on('messageCreate', async (message) => {
                         }
                     }
                     if (tries >= MAX_TRIES) {
-                        message.reply(`The closest match to the provided date and time after 15 searches is match ID: ${closest}. Visit the multi link here https://osu.ppy.sh/community/matches/${closest} `);
+                        message.reply(`The closest match to the provided date and time after 20 searches is match ID: ${closest}. Visit the multi link here https://osu.ppy.sh/community/matches/${closest} `);
                     }
                 }
             }
