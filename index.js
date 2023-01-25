@@ -73,59 +73,105 @@ client.on('messageCreate', async (message) => {
         }
         // Command to return a matchID that's the closest to the given date
         if (commandName === 'findmatch') {
-            // ID for July 2022
-            const MIN_MATCH_ID = 102500000;
-            // ID for January 2023
-            const MAX_MATCH_ID = 107000000;
-            const MAX_TRIES = 10;
-            const args = message.content.split(' ');
-            const targetDate = new Date(args.slice(1).join(' '));
-            let closestMatchId;
-            let closestDifference = Infinity;
-            let minId = MIN_MATCH_ID;
-            let maxId = MAX_MATCH_ID;
-            let tries = 0;
-            let middleId = Math.floor((minId + maxId) / 2);
-            let closest;
-            console.log(`This is the target date: ${targetDate}`)
-
-            while (minId <= maxId && tries < MAX_TRIES) {
+            let maxMatchId;
+            let id = 106458592;
+            let attempts = 0;
+            const maxAttempts = 20;
+            // set a maximum difference of 55 days
+            const maxDifference = 55 * 24 * 60 * 60 * 1000;
+            const currentDate = new Date();
+            while (attempts < maxAttempts) {
                 try {
-                    console.log(`Current range: ${minId} - ${maxId}`)
-                    const match = await osuApi.getMatch({ mp: middleId });
+                    const match = await osuApi.getMatch({ mp: id });
+                    console.log(`checking id: ${id} to see the date.`)
                     const matchDate = new Date(match.raw_start);
-                    const difference = Math.abs(targetDate - matchDate);
-                    if (difference < closestDifference) {
-                        closestMatchId = match.match_id;
-                        closestDifference = difference;
-                    }
-                    if (matchDate > targetDate) {
-                        closest = middleId
-                        maxId = middleId - 1;
-                        middleId = Math.floor((minId + maxId) / 2);
-                        tries++;
-                    } else {
-                        closest = middleId
-                        minId = middleId + 1;
-                        middleId = Math.floor((minId + maxId) / 2);
-                        tries++;
+                    const difference = currentDate - matchDate;
+                    if (difference < maxDifference) {
+                        maxMatchId = id + 1000000;
+                        break;
                     }
                 } catch (error) {
                     if (error.message !== 'Not found') {
                         console.log(error);
-                    }
-                    else {
-                        newMiddleId = middleId + Math.floor(Math.random() * (maxId - minId)) - Math.floor(Math.random() * (maxId - minId));
-                        if (newMiddleId <= maxId && newMiddleId >= minId) {
-                            tries++;
-                            console.log(`This was try number ${tries}, the id did not give a response, created a new random id: ${newMiddleId}`);
-                            middleId = newMiddleId;
-                        } else {
-                        }
+                        break;
                     }
                 }
-                if (tries >= MAX_TRIES) {
-                    message.reply(`The closest match to the provided date and time after 10 searches is match ID: ${closest}. Visit the multi link here https://osu.ppy.sh/community/matches/${closest} `);
+                id += 1000000;
+                attempts++;
+            }
+
+            if (attempts >= maxAttempts) {
+                console.log("Max attempts to find latest id was reached, no max match id found, you probably haven't used the bot for a while? re-adjust the id value in the code.");
+            }
+            else {
+                // calculate the min match id
+                const minMatchId = maxMatchId - 4000000;
+                const MAX_TRIES = 15;
+                const args = message.content.split(' ');
+                let targetDate;
+                const dateRegex = /(\d{2})-(\d{2})-(\d{4})/;
+                const dateString = args.slice(1).join(' ');
+
+                const match = dateString.match(dateRegex);
+                if (match) {
+                    const [_, day, month, year] = match;
+                    targetDate = new Date(`${year}-${month}-${day} ${dateString.slice(10)}`);
+                } else {
+                    targetDate = new Date(dateString);
+                }
+                let closestMatchId;
+                let closestDifference = Infinity;
+                let minId = minMatchId;
+                let maxId = maxMatchId;
+                let tries = 0;
+                let middleId = Math.floor((minId + maxId) / 2);
+                let closest;
+                console.log(`This is the target date: ${targetDate}`)
+
+                if (targetDate > currentDate) {
+                    message.reply(`The date you have entered is in the future, please enter a date that's in the past.`);
+                    return;
+                }
+
+                while (minId <= maxId && tries < MAX_TRIES) {
+                    try {
+                        console.log(`Current range: ${minId} - ${maxId}`)
+                        const match = await osuApi.getMatch({ mp: middleId });
+                        const matchDate = new Date(match.raw_start);
+                        const difference = Math.abs(targetDate - matchDate);
+                        if (difference < closestDifference) {
+                            closestMatchId = match.match_id;
+                            closestDifference = difference;
+                        }
+                        if (matchDate > targetDate) {
+                            closest = middleId
+                            maxId = middleId - 1;
+                            middleId = Math.floor((minId + maxId) / 2);
+                            tries++;
+                        } else {
+                            closest = middleId
+                            minId = middleId + 1;
+                            middleId = Math.floor((minId + maxId) / 2);
+                            tries++;
+                        }
+                    } catch (error) {
+                        if (error.message !== 'Not found') {
+                            console.log(error);
+                        }
+                        else {
+                            maxId = middleId
+                            newMiddleId = middleId + Math.floor(Math.random() * (maxId - minId)) - Math.floor(Math.random() * (maxId - minId));
+                            if (newMiddleId <= maxId && newMiddleId >= minId) {
+                                tries++;
+                                console.log(`This was try number ${tries}, the id did not give a response, created a new random id: ${newMiddleId}`);
+                                middleId = newMiddleId;
+                            } else {
+                            }
+                        }
+                    }
+                    if (tries >= MAX_TRIES) {
+                        message.reply(`The closest match to the provided date and time after 15 searches is match ID: ${closest}. Visit the multi link here https://osu.ppy.sh/community/matches/${closest} `);
+                    }
                 }
             }
         }
